@@ -14,6 +14,7 @@ import os
 import pytesseract
 import argparse
 import cv2
+import time
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 
 
@@ -39,7 +40,7 @@ def Process(CaptchaImage, preprocess = 'blur'):
 
 def CaptchaCracker(
         ShowScreenShot = 0,
-        District = 25, 
+        DistrictNumber = 25, 
         Assembly = 199, 
         PartMinMax = (1, 1000), 
         cropping = (641, 409, 841, 443), 
@@ -61,78 +62,79 @@ def CaptchaCracker(
     url ="https://ceo.maharashtra.gov.in/SearchList/"
     driver = webdriver.Firefox(executable_path = geckodriver, firefox_profile=fp)
     driver.get(url)
-    District =  driver.find_element_by_xpath('//select[@name="ctl00$Content$DistrictList"]')
-    District.click()
-    MumbaiDistrict = driver.find_element_by_xpath('//option[@value="25"]')
-    MumbaiDistrict.click()
-    for AssemblyList in range(Assembly, Assembly + 1):
-
-        Assembly =  driver.find_element_by_xpath('//option[@value='+str(AssemblyList)+']')
+    try:
+        District =  driver.find_element_by_xpath('//select[@name="ctl00$Content$DistrictList"]')
+        District.click()
+        MumbaiDistrict = driver.find_element_by_xpath('//option[@value='+str(DistrictNumber)+']')
+        MumbaiDistrict.click()
+        Assembly =  driver.find_element_by_xpath('//option[@value='+str(Assembly)+']')
         Assembly.click()
+        global PartList
         PartList = int(PartMinMax[0])
-        try:
-            while PartList < (int(PartMinMax[1]) + 1):    
-                Part =  driver.find_element_by_xpath('//select[@name="ctl00$Content$PartList"]/option[@value='+str(PartList)+']')
-                Part.click()
-                                
-                driver.save_screenshot('captcha/captcha.png')
-                image = Image.open('captcha/captcha.png')
-                
-                if ShowScreenShot == 1:
-                    plt.imshow(image)
-                    plt.show()
-                    ShowScreenShot = 99
-                    input('Press any key to continue..')
-                
-                image = image.crop(cropping)
-                image.save('png/captcha.png')
-                CaptchaBreak = Process('png/captcha.png', preprocess)
-                InputCaptcha =  driver.find_element_by_xpath('//input[@name="ctl00$Content$txtcaptcha"]')
-                InputCaptcha.send_keys(CaptchaBreak)
-                
-                try :
-                    Submit =  driver.find_element_by_xpath('//input[@type="submit"]')
-                    Submit.click()
-                    driver.find_element_by_link_text('View PDF').click()
-                    print (driver.window_handles)
+    
+        while PartList < (int(PartMinMax[1]) + 1):    
+            Part =  driver.find_element_by_xpath('//select[@name="ctl00$Content$PartList"]/option[@value='+str(PartList)+']')
+            Part.click()
                     
-                    PartList = PartList + 1
-                    print('Part List --> ', PartList, end = '\n\n')
-                    
-                    
-                except:
-                    print('Part List --> ', PartList, end = '\n\n')
-                    driver.find_element_by_xpath('//input[@name="ctl00$Content$txtcaptcha"]').clear()
-                    PartList = PartList
-                    
-        except NoSuchElementException:
-            print('NoSuchElementException Occured')
-            driver.close()
-            PartList = PartList
-            CaptchaCracker(
-                    ShowScreenShot = ShowScreenShot,
-                    District = District, 
-                    Assembly = Assembly, 
-                    PartMinMax = (PartList, int(PartMinMax[1])),
-                    cropping = cropping, 
-                    output = output,
-                    preprocess = preprocess
-                    )              
+            #time.sleep(0.5)
+            driver.save_screenshot('captcha/captcha.png')
+            image = Image.open('captcha/captcha.png')
             
-        except StaleElementReferenceException:
-            print('StaleElementReferenceException Occured')
-            driver.find_element_by_xpath('//input[@name="ctl00$Content$txtcaptcha"]').clear()
-            driver.close()
-            PartList = PartList
-            CaptchaCracker(
-                    ShowScreenShot = ShowScreenShot,
-                    District = District, 
-                    Assembly = Assembly, 
-                    PartMinMax = (PartList, int(PartMinMax[1])),
-                    cropping = cropping, 
-                    output = output,
-                    preprocess = preprocess
-                    )
+            if ShowScreenShot == 1:
+                plt.imshow(image)
+                plt.show()
+                ShowScreenShot = 99
+                input('Press any key to continue..')
+            
+            image = image.crop(cropping)
+            image.save('png/captcha.png')
+            CaptchaBreak = Process('png/captcha.png', preprocess)
+            InputCaptcha =  driver.find_element_by_xpath('//input[@name="ctl00$Content$txtcaptcha"]')
+            InputCaptcha.send_keys(CaptchaBreak)
+            
+            try :
+                Submit =  driver.find_element_by_xpath('//input[@type="submit"]')
+                Submit.click()
+                driver.find_element_by_link_text('View PDF').click()
+                print (driver.window_handles)
+                
+                PartList = PartList + 1
+                print('Part List --> ', PartList, end = '\n\n')
+                
+                
+            except:
+                print('Part List --> ', PartList, end = '\n\n')
+                driver.find_element_by_xpath('//input[@name="ctl00$Content$txtcaptcha"]').clear()
+                PartList = PartList
+                
+    except NoSuchElementException:
+        print('NoSuchElementException Occured')
+        driver.close()
+        PartList = PartList
+        CaptchaCracker(
+            ShowScreenShot = ShowScreenShot,
+            DistrictNumber = DistrictNumber, 
+            Assembly = Assembly, 
+            PartMinMax = (PartList, int(PartMinMax[1])),
+            cropping = cropping, 
+            output = output,
+            preprocess = preprocess
+            )              
+        
+    except StaleElementReferenceException:
+        print('StaleElementReferenceException Occured')
+        driver.find_element_by_xpath('//input[@name="ctl00$Content$txtcaptcha"]').clear()
+        driver.close()
+        PartList = PartList
+        CaptchaCracker(
+                ShowScreenShot = ShowScreenShot,
+                DistrictNumber = DistrictNumber, 
+                Assembly = Assembly, 
+                PartMinMax = (PartList, int(PartMinMax[1])),
+                cropping = cropping, 
+                output = output,
+                preprocess = preprocess
+                )
                 
                 
 ap = argparse.ArgumentParser()
@@ -155,7 +157,7 @@ args = vars(ap.parse_args())
 
 CaptchaCracker(
         ShowScreenShot = args['ShowScreenShot'],
-        District = args['District'],
+        DistrictNumber = args['District'],
         Assembly = args['Assembly'], 
         PartMinMax = tuple(args['PartMinMax']), 
         cropping = tuple(args['cropping']), 
