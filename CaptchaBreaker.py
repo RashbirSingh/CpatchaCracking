@@ -15,8 +15,7 @@ import pytesseract
 import argparse
 import cv2
 import time
-from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
-
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, UnexpectedAlertPresentException
 
 def Process(CaptchaImage, preprocess = 'blur'):
     image = cv2.imread(CaptchaImage)
@@ -41,7 +40,7 @@ def Process(CaptchaImage, preprocess = 'blur'):
 def CaptchaCracker(
         ShowScreenShot = 0,
         DistrictNumber = 25, 
-        Assembly = 199, 
+        AssemblyList = 199, 
         PartMinMax = (1, 1000), 
         cropping = (641, 409, 841, 443), 
         output = 'Pune',
@@ -67,7 +66,9 @@ def CaptchaCracker(
         District.click()
         MumbaiDistrict = driver.find_element_by_xpath('//option[@value='+str(DistrictNumber)+']')
         MumbaiDistrict.click()
-        Assembly =  driver.find_element_by_xpath('//option[@value='+str(Assembly)+']')
+        print(AssemblyList)
+        print(PartMinMax)
+        Assembly =  driver.find_element_by_xpath('//option[@value='+str(AssemblyList)+']')
         Assembly.click()
         global PartList
         PartList = int(PartMinMax[0])
@@ -114,7 +115,7 @@ def CaptchaCracker(
         CaptchaCracker(
             ShowScreenShot = ShowScreenShot,
             DistrictNumber = DistrictNumber, 
-            Assembly = Assembly, 
+            AssemblyList = AssemblyList, 
             PartMinMax = (PartList, int(PartMinMax[1])),
             cropping = cropping, 
             output = output,
@@ -129,12 +130,27 @@ def CaptchaCracker(
         CaptchaCracker(
                 ShowScreenShot = ShowScreenShot,
                 DistrictNumber = DistrictNumber, 
-                Assembly = Assembly, 
+                AssemblyList = AssemblyList, 
                 PartMinMax = (PartList, int(PartMinMax[1])),
                 cropping = cropping, 
                 output = output,
                 preprocess = preprocess
                 )
+        
+    except UnexpectedAlertPresentException:
+        print('UnexpectedAlertPresentException Occured')
+        driver.close()
+        PartList = PartList
+        CaptchaCracker(
+            ShowScreenShot = ShowScreenShot,
+            DistrictNumber = DistrictNumber, 
+            AssemblyList = AssemblyList, 
+            PartMinMax = (PartList, int(PartMinMax[1])),
+            cropping = cropping, 
+            output = output,
+            preprocess = preprocess
+            ) 
+        
                 
                 
 ap = argparse.ArgumentParser()
@@ -158,7 +174,7 @@ args = vars(ap.parse_args())
 CaptchaCracker(
         ShowScreenShot = args['ShowScreenShot'],
         DistrictNumber = args['District'],
-        Assembly = args['Assembly'], 
+        AssemblyList = args['Assembly'], 
         PartMinMax = tuple(args['PartMinMax']), 
         cropping = tuple(args['cropping']), 
         output = args['output'],
