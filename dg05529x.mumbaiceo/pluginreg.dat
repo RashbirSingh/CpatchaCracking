@@ -1,0 +1,15 @@
+Generated File. Do not edit.
+
+[HEADER]
+Version:0.19t:$
+Arch:x86_64-gcc3:$
+
+[PLUGINS]
+
+[INVALID]
+/usr/lib/mozilla/plugins/nppdf.so:$
+1556863157000:$
+/usr/lib/firefox-addons/plugins/nppdf.so:$
+1556863157000:$
+/usr/lib/mozilla/plugins/libgnome-shell-browser-plugin.so:$
+1544015290000:$
